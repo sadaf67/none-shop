@@ -1,0 +1,135 @@
+name: n-one
+
+services:
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    env_file:
+      - .env.production
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\""]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    networks:
+      - private
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  backend:
+    image: n-one-backend:local
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    restart: unless-stopped
+    init: true
+    env_file:
+      - .env.production
+    depends_on:
+      db:
+        condition: service_healthy
+    expose:
+      - "8000"
+    volumes:
+      - static_data:/var/www/static
+      - media_data:/var/www/media
+    read_only: true
+    tmpfs:
+      - /tmp
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request; r=urllib.request.Request('http://127.0.0.1:8000/health/', headers={'Host':'backend','X-Forwarded-Proto':'https'}); urllib.request.urlopen(r, timeout=5).read()"
+      interval: 15s
+      timeout: 7s
+      retries: 10
+      start_period: 45s
+    networks:
+      - private
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  scheduler:
+    image: n-one-backend:local
+    restart: unless-stopped
+    init: true
+    env_file:
+      - .env.production
+    environment:
+      RUN_MIGRATIONS: "false"
+      RUN_COLLECTSTATIC: "false"
+    depends_on:
+      backend:
+        condition: service_healthy
+    command:
+      - sh
+      - -c
+      - "while true; do python manage.py release_expired_orders; sleep 300; done"
+    read_only: true
+    tmpfs:
+      - /tmp
+    networks:
+      - private
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+      args:
+        VITE_API_BASE_URL: /api
+        VITE_PUBLIC_URL: ${FRONTEND_URL:-https://example.com}
+        VITE_FREE_SHIPPING_THRESHOLD: ${FREE_SHIPPING_THRESHOLD:-500000}
+        VITE_FLAT_SHIPPING_COST: ${FLAT_SHIPPING_COST:-30000}
+    restart: unless-stopped
+    init: true
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "${APP_HTTP_BIND:-127.0.0.1}:${APP_HTTP_PORT:-8080}:80"
+    volumes:
+      - static_data:/var/www/static:ro
+      - media_data:/var/www/media:ro
+    read_only: true
+    tmpfs:
+      - /var/cache/nginx
+      - /var/run
+      - /tmp
+    healthcheck:
+      test: ["CMD-SHELL", "wget --quiet --spider http://127.0.0.1/ || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - private
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  postgres_data:
+  static_data:
+  media_data:
+
+networks:
+  private:
+    driver: bridge

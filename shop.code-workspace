@@ -1,0 +1,182 @@
+{
+  "folders": [
+    {
+      "name": "🛍️ فروشگاه — Root",
+      "path": "."
+    },
+    {
+      "name": "⚙️ Backend (Django)",
+      "path": "./backend"
+    },
+    {
+      "name": "⚛️ Frontend (React)",
+      "path": "./frontend"
+    }
+  ],
+  "settings": {
+    "editor.fontSize": 14,
+    "editor.tabSize": 2,
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "[python]": {
+      "editor.defaultFormatter": "ms-python.python"
+    },
+    "python.defaultInterpreterPath": "${workspaceFolder:⚙️ Backend (Django)}/../venv/Scripts/python.exe",
+    "python.terminal.activateEnvironment": true,
+    "files.associations": {
+      "*.py": "python"
+    },
+    "terminal.integrated.defaultProfile.windows": "PowerShell",
+    "editor.minimap.enabled": false,
+    "workbench.colorTheme": "One Dark Pro",
+    "explorer.confirmDelete": false
+  },
+  "extensions": {
+    "recommendations": [
+      "ms-python.python",
+      "ms-python.vscode-pylance",
+      "dbaeumer.vscode-eslint",
+      "esbenp.prettier-vscode",
+      "bradlc.vscode-tailwindcss",
+      "dsznajder.es7-react-js-snippets",
+      "formulahendry.auto-rename-tag",
+      "zhuangtongfa.material-theme",
+      "pkief.material-icon-theme"
+    ]
+  },
+  "launch": {
+    "version": "0.2.0",
+    "configurations": [
+      {
+        "name": "🐍 Django Server",
+        "type": "debugpy",
+        "request": "launch",
+        "program": "${workspaceFolder:⚙️ Backend (Django)}/manage.py",
+        "args": ["runserver"],
+        "django": true,
+        "env": {
+          "PYTHONIOENCODING": "utf-8",
+          "PYTHONUTF8": "1"
+        },
+        "console": "integratedTerminal",
+        "justMyCode": true
+      }
+    ],
+    "compounds": [
+      {
+        "name": "🚀 Django + React",
+        "configurations": ["🐍 Django Server"]
+      }
+    ]
+  },
+  "tasks": {
+    "version": "2.0.0",
+    "tasks": [
+      {
+        "label": "🐍 Start Django Backend",
+        "type": "shell",
+        "command": "${workspaceFolder:⚙️ Backend (Django)}/../venv/Scripts/python.exe",
+        "args": ["manage.py", "runserver"],
+        "options": {
+          "cwd": "${workspaceFolder:⚙️ Backend (Django)}",
+          "env": {
+            "PYTHONIOENCODING": "utf-8",
+            "PYTHONUTF8": "1"
+          }
+        },
+        "group": "build",
+        "presentation": {
+          "reveal": "always",
+          "panel": "dedicated",
+          "group": "servers"
+        },
+        "isBackground": true,
+        "problemMatcher": {
+          "pattern": {
+            "regexp": "^(.*)$",
+            "file": 1,
+            "line": 1,
+            "message": 1
+          },
+          "background": {
+            "activeOnStart": true,
+            "beginsPattern": "Watching for file changes",
+            "endsPattern": "Quit the server"
+          }
+        }
+      },
+      {
+        "label": "⚛️ Start React Frontend",
+        "type": "shell",
+        "command": "npm",
+        "args": ["run", "dev"],
+        "options": {
+          "cwd": "${workspaceFolder:⚛️ Frontend (React)}"
+        },
+        "group": "build",
+        "presentation": {
+          "reveal": "always",
+          "panel": "dedicated",
+          "group": "servers"
+        },
+        "isBackground": true,
+        "problemMatcher": {
+          "pattern": {
+            "regexp": "^(.*)$",
+            "file": 1,
+            "line": 1,
+            "message": 1
+          },
+          "background": {
+            "activeOnStart": true,
+            "beginsPattern": "VITE",
+            "endsPattern": "press h \\+ enter"
+          }
+        }
+      },
+      {
+        "label": "🚀 Start Full Stack (Django + React)",
+        "dependsOn": ["🐍 Start Django Backend", "⚛️ Start React Frontend"],
+        "group": {
+          "kind": "build",
+          "isDefault": true
+        },
+        "presentation": {
+          "reveal": "always"
+        }
+      },
+      {
+        "label": "🔄 Django Migrate",
+        "type": "shell",
+        "command": "${workspaceFolder:⚙️ Backend (Django)}/../venv/Scripts/python.exe",
+        "args": ["manage.py", "migrate"],
+        "options": {
+          "cwd": "${workspaceFolder:⚙️ Backend (Django)}",
+          "env": { "PYTHONIOENCODING": "utf-8", "PYTHONUTF8": "1" }
+        },
+        "group": "none",
+        "presentation": { "reveal": "always", "panel": "shared" }
+      },
+      {
+        "label": "📦 Django Make Migrations",
+        "type": "shell",
+        "command": "${workspaceFolder:⚙️ Backend (Django)}/../venv/Scripts/python.exe",
+        "args": ["manage.py", "makemigrations"],
+        "options": {
+          "cwd": "${workspaceFolder:⚙️ Backend (Django)}",
+          "env": { "PYTHONIOENCODING": "utf-8", "PYTHONUTF8": "1" }
+        },
+        "group": "none",
+        "presentation": { "reveal": "always", "panel": "shared" }
+      },
+      {
+        "label": "📦 Install Frontend Packages",
+        "type": "shell",
+        "command": "npm",
+        "args": ["install"],
+        "options": { "cwd": "${workspaceFolder:⚛️ Frontend (React)}" },
+        "presentation": { "reveal": "always", "panel": "shared" }
+      }
+    ]
+  }
+}
